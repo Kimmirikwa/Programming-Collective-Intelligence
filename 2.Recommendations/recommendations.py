@@ -116,3 +116,13 @@ def getRecommendations(critics, person, similarity=sim_pearson):
 	recoms.reverse()
 	return recoms
 
+
+def transformPrefs(critics):
+	results = {}
+	for critic in critics:
+		for movie in critics[critic]:
+			results.setdefault(movie, {})
+			results[movie][critic] = critics[critic][movie]
+
+	return results
+
