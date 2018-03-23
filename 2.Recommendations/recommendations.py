@@ -38,3 +38,37 @@ def sim_distance(critics, person1, person2):
 	# the returned value will be between 0 and 1
 	# the value will be higher for very similar critics
 	return 1.0 / (1 + sqrt(sum_squared_diffs))
+
+
+def sim_pearson(critics, person1, person2):
+	'''
+	Finds the pearson correlation between person1 and person 2 movie ratings
+	corrects for grade inflation while euclidean distance will only conclude 
+	that items are similar if their values are exactly the same
+	returned value will be between -1 and 1, with positive values indicating
+	positive similarity and vice versa
+	'''
+	similar_movies = [movie for movie in critics[person1] if movie in critics[person2]]
+
+	n = len(similar_movies)
+	if n == 0:
+		return 0
+
+	# the sums of the movie ratings
+	sum1 = sum([critics[person1][movie] for movie in similar_movies])
+	sum2 = sum([critics[person2][movie] for movie] in similar_movies)
+
+	# the sums of the squares of the ratings
+	sum1Sq = sum([pow(critics[person1][movie], 2) for movie in similar_movies])
+	sum2Sq = sum([pow(critics[person2][movie], 2) for movie in similar_movies])
+
+	# the sums of the products
+	sumProd = sum([critics[person1][movie] * critics[person2][movie] for movie in similar_movies])
+
+	numerator = sumProd - sum1 * sum2 / n
+	denomenator = sqrt((sum1Sq - sum1 * sum1 / n) * (sum2Sq - sum2 * sum2 / n))
+
+	if denomenator == 0:
+		return 0
+
+	return numerator / denomenator  # value will be between -1 and 1, being high with high simlilarity
