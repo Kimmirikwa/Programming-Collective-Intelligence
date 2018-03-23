@@ -84,3 +84,35 @@ def topMatches(critics, person, n=5, similarity=sim_pearson):
 	matches.sort()
 	matches.reverse()
 	return matches[0:n]
+
+
+def getRecommendations(critics, person, similarity=sim_pearson):
+	'''
+	gets the recommendations for a person
+	'''
+	sim_sums = {} # will hold the sums of the similarities
+	product_sums = {}  # will hold the sums of the products of the similarites and movie ratings
+
+	for critic in critics:
+		if critic == person:  # a person can't recomment him/herself
+			continue
+
+		sim = similarity(critics, person, critic)
+
+		for watched_movie in person:
+			for movie in critic:
+				if movie == watched_movie:  # should not recomment a movie watched
+					continue
+
+				sim_sums.setdefault(movie, 0)
+				sim_sums[movie] += sim
+
+				product_sums.setdefault(movie, 0)
+				product_sums[movie] += sim * critics[critic][movie]
+
+	recoms = [(sum_movie / sim_sums(movie), movie) for movie, sum_movie in product_sums.items()]
+
+	recoms.sort()
+	recoms.reverse()
+	return recoms
+
