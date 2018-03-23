@@ -72,3 +72,15 @@ def sim_pearson(critics, person1, person2):
 		return 0
 
 	return numerator / denomenator  # value will be between -1 and 1, being high with high simlilarity
+
+
+def topMatches(critics, person, n=5, similarity=sim_pearson):
+	'''
+	return n critics who are most similar to person in a sorted order
+	'''
+	matches = [(similarity(critics, person, other), other) for other in critics if other != person]
+
+	# sorts and reverses the matches in place and returns n most similar critics
+	matches.sort()
+	matches.reverse()
+	return matches[0:n]
