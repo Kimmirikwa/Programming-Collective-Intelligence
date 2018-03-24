@@ -1,7 +1,7 @@
 from math import sqrt
 
-# A dictionary of movie critics and their ratings of a small
-# set of movies
+# A dictionary of item critics and their ratings of a small
+# set of items
 critics = {
 	'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5,
 	'Just My Luck': 3.0, 'Superman Returns': 3.5, 'You, Me and Dupree': 2.5,
@@ -25,15 +25,15 @@ critics = {
 def sim_distance(critics, person1, person2):
 	'''
 	Finds the Euclidean distance between person1 and person2
-	movies ratings
+	items ratings
 	'''
-	similar_movies = [movie for movie in critics[person1] if movie in critics[person2]]
+	similar_items = [item for item in critics[person1] if item in critics[person2]]
 
-	if len(similar_movies) == 0:
+	if len(similar_items) == 0:
 		return 0
 
 	# the sums will be big if the user ratings are very different
-	sum_squared_diffs = sum([pow(critics[person1][movie] - critics[person2][movie], 2) for movie in similar_movies])
+	sum_squared_diffs = sum([pow(critics[person1][item] - critics[person2][item], 2) for item in similar_items])
 
 	# the returned value will be between 0 and 1
 	# the value will be higher for very similar critics
@@ -42,28 +42,28 @@ def sim_distance(critics, person1, person2):
 
 def sim_pearson(critics, person1, person2):
 	'''
-	Finds the pearson correlation between person1 and person 2 movie ratings
+	Finds the pearson correlation between person1 and person 2 item ratings
 	corrects for grade inflation while euclidean distance will only conclude 
 	that items are similar if their values are exactly the same
 	returned value will be between -1 and 1, with positive values indicating
 	positive similarity and vice versa
 	'''
-	similar_movies = [movie for movie in critics[person1] if movie in critics[person2]]
+	similar_items = [item for item in critics[person1] if item in critics[person2]]
 
-	n = len(similar_movies)
+	n = len(similar_items)
 	if n == 0:
 		return 0
 
-	# the sums of the movie ratings
-	sum1 = sum([critics[person1][movie] for movie in similar_movies])
-	sum2 = sum([critics[person2][movie] for movie] in similar_movies)
+	# the sums of the item ratings
+	sum1 = sum([critics[person1][item] for item in similar_items])
+	sum2 = sum([critics[person2][item] for item] in similar_items)
 
 	# the sums of the squares of the ratings
-	sum1Sq = sum([pow(critics[person1][movie], 2) for movie in similar_movies])
-	sum2Sq = sum([pow(critics[person2][movie], 2) for movie in similar_movies])
+	sum1Sq = sum([pow(critics[person1][item], 2) for item in similar_items])
+	sum2Sq = sum([pow(critics[person2][item], 2) for item in similar_items])
 
 	# the sums of the products
-	sumProd = sum([critics[person1][movie] * critics[person2][movie] for movie in similar_movies])
+	sumProd = sum([critics[person1][item] * critics[person2][item] for item in similar_items])
 
 	numerator = sumProd - sum1 * sum2 / n
 	denomenator = sqrt((sum1Sq - sum1 * sum1 / n) * (sum2Sq - sum2 * sum2 / n))
@@ -91,7 +91,7 @@ def getRecommendations(critics, person, similarity=sim_pearson):
 	gets the recommendations for a person
 	'''
 	sim_sums = {} # will hold the sums of the similarities
-	product_sums = {}  # will hold the sums of the products of the similarites and movie ratings
+	product_sums = {}  # will hold the sums of the products of the similarites and item ratings
 
 	for critic in critics:
 		if critic == person:  # a person can't recomment him/herself
@@ -99,18 +99,18 @@ def getRecommendations(critics, person, similarity=sim_pearson):
 
 		sim = similarity(critics, person, critic)
 
-		for watched_movie in person:
-			for movie in critic:
-				if movie == watched_movie:  # should not recomment a movie watched
+		for watched_item in person:
+			for item in critic:
+				if item == watched_item:  # should not recomment a item watched
 					continue
 
-				sim_sums.setdefault(movie, 0)
-				sim_sums[movie] += sim
+				sim_sums.setdefault(item, 0)
+				sim_sums[item] += sim
 
-				product_sums.setdefault(movie, 0)
-				product_sums[movie] += sim * critics[critic][movie]
+				product_sums.setdefault(item, 0)
+				product_sums[item] += sim * critics[critic][item]
 
-	recoms = [(sum_movie / sim_sums(movie), movie) for movie, sum_movie in product_sums.items()]
+	recoms = [(sum_item / sim_sums(item), item) for item, sum_item in product_sums.items()]
 
 	recoms.sort()
 	recoms.reverse()
@@ -120,29 +120,29 @@ def getRecommendations(critics, person, similarity=sim_pearson):
 def transformPrefs(prefs):
 	results = {}
 	for critic in prefs:
-		for movie in prefs[critic]:
-			results.setdefault(movie, {})
-			results[movie][critic] = prefs[critic][movie]
+		for item in prefs[critic]:
+			results.setdefault(item, {})
+			results[item][critic] = prefs[critic][item]
 
 	return results
 
 
 def calculateSimilarities(prefs, n=10):
 	'''
-	gets the similarities between movies
-	this does not need to run very often as movie similarities may not change a lot after a new rating comes in
+	gets the similarities between items
+	this does not need to run very often as item similarities may not change a lot after a new rating comes in
 	for instance, the calculation can be done during low traffic hours or in another computer that if off network
 	'''
-	moviePrefs = transformPrefs(prefs)
+	itemPrefs = transformPrefs(prefs)
 	results = {}
 
 	c = 0
 
-	for movie in moviePrefs:
+	for item in itemPrefs:
 		c += 1
 		if c % 100 == 0:
-			print "%d / %d" % (c,len(moviePrefs))
-		scores = topMatches(moviePrefs, movie, n=n, similarity=sim_distance)
-		results[movie] = scores
+			print "%d / %d" % (c,len(itemPrefs))
+		scores = topMatches(itemPrefs, item, n=n, similarity=sim_distance)
+		results[item] = scores
 
-	return results # each movie will have its 10 most similar movies
+	return results # each item will have its 10 most similar items
