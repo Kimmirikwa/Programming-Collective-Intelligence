@@ -56,7 +56,7 @@ def sim_pearson(critics, person1, person2):
 
 	# the sums of the item ratings
 	sum1 = sum([critics[person1][item] for item in similar_items])
-	sum2 = sum([critics[person2][item] for item] in similar_items)
+	sum2 = sum([critics[person2][item] for item in similar_items])
 
 	# the sums of the squares of the ratings
 	sum1Sq = sum([pow(critics[person1][item], 2) for item in similar_items])
@@ -86,31 +86,31 @@ def topMatches(critics, person, n=5, similarity=sim_pearson):
 	return matches[0:n]
 
 
-def getRecommendations(critics, person, similarity=sim_pearson):
+def getRecommendations(prefs, person, similarity=sim_pearson):
 	'''
 	gets the recommendations for a person
 	'''
 	sim_sums = {} # will hold the sums of the similarities
 	product_sums = {}  # will hold the sums of the products of the similarites and item ratings
 
-	for critic in critics:
-		if critic == person:  # a person can't recomment him/herself
+	for other in prefs:
+		if other == person:  # a person can't recomment him/herself
 			continue
 
-		sim = similarity(critics, person, critic)
+		sim = similarity(prefs, person, other)
 
-		for watched_item in person:
-			for item in critic:
-				if item == watched_item:  # should not recomment a item watched
-					continue
+		if sim <= 0:
+			continue
 
+		for item in prefs[other]:
+			if item not in prefs[person] or prefs[person][item]==0:
 				sim_sums.setdefault(item, 0)
 				sim_sums[item] += sim
 
-				product_sums.setdefault(item, 0)
-				product_sums[item] += sim * critics[critic][item]
+				product_sums.setdefault(item,0)
+				product_sums[item] += prefs[other][item] * sim
 
-	recoms = [(sum_item / sim_sums(item), item) for item, sum_item in product_sums.items()]
+	recoms = [(sum_item / sim_sums[item], item) for item, sum_item in product_sums.items()]
 
 	recoms.sort()
 	recoms.reverse()
@@ -127,7 +127,7 @@ def transformPrefs(prefs):
 	return results
 
 
-def calculateSimilarities(prefs, n=10):
+def calculateSimilarItems(prefs, n=10):
 	'''
 	gets the similarities between items
 	this does not need to run very often as item similarities may not change a lot after a new rating comes in
@@ -177,3 +177,30 @@ def getRecommendedItems(prefs, itemsMatch, user):
 	recoms.sort()
 	recoms.reverse()
 	return recoms
+
+
+def loadMovieLens(path="/home/mirikwa/projects/ml/Programming-Collective-Intelligence/2.Recommendations/data"):
+	'''
+	loads the movies data and composes the preferences
+	''' 
+
+	# get the movie titles from u.item
+	# an example line is as below
+	# 1|Toy Story (1995)|01-Jan-1995||http://us.imdb.com/M/title-exact?Toy%20Story%20(1995)|0|0|0|1|1|1|0|0|0|0|0|0|0|0|0|0|0|0|0
+	# values are separated by |, from the line above 1 is the id and Toy Story (1995) is the title
+	movies = {}
+	for line in open(path+'/u.item'):
+		movie_id, title = line.split('|')[0:2]
+		movies[movie_id] = title
+
+	# composing the preferences
+	# an example line from u.data
+	# 196	242	3	881250949
+	# in the above line 196 is the user id, 242 the movie id, 3 is the rating and 881250949 is the timestamp
+	# prefs will be a nested dict of users and their ratings for different movies
+	prefs = {}
+	for line in open(path+'/u.data'):
+		user, movie_id, rating, ts = line.split('\t')
+		prefs.setdefault(user, {})
+		prefs[user][movies[movie_id]] = float(rating)
+	return prefs
