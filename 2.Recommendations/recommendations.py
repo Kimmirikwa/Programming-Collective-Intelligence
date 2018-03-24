@@ -146,3 +146,34 @@ def calculateSimilarities(prefs, n=10):
 		results[item] = scores
 
 	return results # each item will have its 10 most similar items
+
+
+def getRecommendedItems(prefs, itemsMatch, user):
+	'''
+	gets recommendations for a user using item based filtering
+	it uses the similarities between items the user has rated and the items the user
+	has not yet rated.
+	item based filtering is more efficient than user based filetering for a sparce
+	data but their perfomance on dense data data is almost the same.
+	'''
+	userRatings = prefs[user]
+
+	scores = {}
+	totalSim = {}
+
+	for (item, rating) in userRatings.items():
+		for (similarity, item2) in itemsMatch[item]:
+			if item2 in userRatings:  # should not recommend an item already rated by the user
+				continue
+
+			totalSim.setdefault(item2, 0)
+			totalSim[item2] += similarity
+
+			scores.setdefault(item2, 0)
+			scores[item2] += similarity * rating
+
+	recoms = [(score/totalSim[item], item) for item, score in scores.items()]
+
+	recoms.sort()
+	recoms.reverse()
+	return recoms
