@@ -117,12 +117,32 @@ def getRecommendations(critics, person, similarity=sim_pearson):
 	return recoms
 
 
-def transformPrefs(critics):
+def transformPrefs(prefs):
 	results = {}
-	for critic in critics:
-		for movie in critics[critic]:
+	for critic in prefs:
+		for movie in prefs[critic]:
 			results.setdefault(movie, {})
-			results[movie][critic] = critics[critic][movie]
+			results[movie][critic] = prefs[critic][movie]
 
 	return results
 
+
+def calculateSimilarities(prefs, n=10):
+	'''
+	gets the similarities between movies
+	this does not need to run very often as movie similarities may not change a lot after a new rating comes in
+	for instance, the calculation can be done during low traffic hours or in another computer that if off network
+	'''
+	moviePrefs = transformPrefs(prefs)
+	results = {}
+
+	c = 0
+
+	for movie in moviePrefs:
+		c += 1
+		if c % 100 == 0:
+			print "%d / %d" % (c,len(moviePrefs))
+		scores = topMatches(moviePrefs, movie, n=n, similarity=sim_distance)
+		results[movie] = scores
+
+	return results # each movie will have its 10 most similar movies
