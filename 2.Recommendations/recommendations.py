@@ -103,12 +103,13 @@ def getRecommendations(prefs, person, similarity=sim_pearson):
 			continue
 
 		for item in prefs[other]:
-			if item not in prefs[person] or prefs[person][item]==0:
-				sim_sums.setdefault(item, 0)
-				sim_sums[item] += sim
+			if prefs[person].get(item):
+				continue
+			sim_sums.setdefault(item, 0)
+			sim_sums[item] += sim
 
-				product_sums.setdefault(item,0)
-				product_sums[item] += prefs[other][item] * sim
+			product_sums.setdefault(item,0)
+			product_sums[item] += prefs[other][item] * sim
 
 	recoms = [(sum_item / sim_sums[item], item) for item, sum_item in product_sums.items()]
 
