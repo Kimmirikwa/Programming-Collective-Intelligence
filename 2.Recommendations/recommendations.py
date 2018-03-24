@@ -74,6 +74,15 @@ def sim_pearson(critics, person1, person2):
 	return numerator / denomenator  # value will be between -1 and 1, being high with high simlilarity
 
 
+def sim_tanimoto(prefs, person1, person2):
+	'''
+	suited for finding similarity between binary data
+	finds the intersection / union of the data sets
+	'''
+	intersection = [item for item in prefs[person1] if prefs[person2].get(item) == prefs[person1][item]]
+	return len(intersection) / (len(prefs[person1]) + len(prefs[person2]) - intersection)
+
+
 def topMatches(critics, person, n=5, similarity=sim_pearson):
 	'''
 	return n critics who are most similar to person in a sorted order
