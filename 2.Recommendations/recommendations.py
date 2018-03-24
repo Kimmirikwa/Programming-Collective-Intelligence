@@ -158,6 +158,22 @@ def calculateSimilarItems(prefs, n=10):
 	return results # each item will have its 10 most similar items
 
 
+def calculateSimilarUsers(prefs, n=5):
+	'''
+	precomputes similar users
+	'''
+	results = {}
+
+	c = 0
+
+	for user in prefs:
+		c += 1
+		if c % 100 == 0:
+			print "%d / %d" % (c,len(itemPrefs))
+		results[user] = topMatches(prefs, user, n=n, similarity=sim_distance)
+
+	return results  # returns users with their n most similar users
+
 def getRecommendedItems(prefs, itemsMatch, user):
 	'''
 	gets recommendations for a user using item based filtering
