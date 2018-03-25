@@ -1,4 +1,5 @@
 from math import sqrt
+from PIL import Image, ImageDraw
 
 
 def readfile(filename):
@@ -116,3 +117,60 @@ def printclust(clust,labels=None,n=0):
 	# now print the right and left branches
 	if clust.left!=None: printclust(clust.left,labels=labels,n=n+1)
 	if clust.right!=None: printclust(clust.right,labels=labels,n=n+1)
+
+
+def getheight(clust):
+	'''
+	The height will be 1 if the cluster is an end point, otherwise it will be the sum
+	of the heights of the children nodes of the node
+	'''
+	if clust.left == None and clust.right == None:
+		return 1
+	return getheight(clust.left) + getheight(clust.right)
+
+def getdepth(clust):
+	'''
+	The depth will be 0 for an endpoint, otherwise it will be the sum of its depth
+	and the max of the depths of its children nodes
+	'''
+	if clust.left == None and clust.right == None:
+		return 0
+	return max(getdepth(clust.left), getdepth(clust.right)) + clust.distance
+
+
+def drawdendrogram(clust,labels,jpeg='clusters.jpg'):
+	# height and width
+	h = getheight(clust) * 20
+	w = 1200
+	depth = getdepth(clust)
+	# width is fixed, so scale distances accordingly
+	scaling = float(w - 150) / depth
+	# Create a new image with a white background
+	img = Image.new('RGB', (w, h), (255, 255, 255))
+	draw = ImageDraw.Draw(img)
+	draw.line((0, h/2, 10, h/2), fill=(255, 0, 0))
+	# Draw the first node
+	drawnode(draw,clust,10,(h/2),scaling,labels)
+	img.save(jpeg,'JPEG')
+
+
+def drawnode(draw,clust,x,y,scaling,labels):
+	if clust.id<0:
+		h1=getheight(clust.left)*20
+		h2=getheight(clust.right)*20
+		top=y-(h1+h2)/2
+		bottom=y+(h1+h2)/2
+		# Line length
+		ll=clust.distance*scaling
+		# Vertical line from this cluster to children
+		draw.line((x,top+h1/2,x,bottom-h2/2),fill=(255,0,0))
+		# Horizontal line to left item
+		draw.line((x,top+h1/2,x+ll,top+h1/2),fill=(255,0,0))
+		# Horizontal line to right item
+		draw.line((x,bottom-h2/2,x+ll,bottom-h2/2),fill=(255,0,0))
+		# Call the function to draw the left and right nodes
+		drawnode(draw,clust.left,x+ll,top+h1/2,scaling,labels)
+		drawnode(draw,clust.right,x+ll,bottom-h2/2,scaling,labels)
+	else:
+		# If this is an endpoint, draw the item label
+		draw.text((x+5,y-7),labels[clust.id],(0,0,0))
