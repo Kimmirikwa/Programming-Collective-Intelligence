@@ -174,3 +174,16 @@ def drawnode(draw,clust,x,y,scaling,labels):
 	else:
 		# If this is an endpoint, draw the item label
 		draw.text((x+5,y-7),labels[clust.id],(0,0,0))
+
+
+def rotatematrix(data):
+	'''
+	transposes the matrix of data
+	'''
+	newdata = []
+
+	for i in range(len(data[0])):
+		new_row = [data[j][i] for j in range(len(data))]
+		newdata.append(new_row)
+
+	return newdata
