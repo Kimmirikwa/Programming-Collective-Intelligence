@@ -1,5 +1,6 @@
 from math import sqrt
 from PIL import Image, ImageDraw
+import random
 
 
 def readfile(filename):
@@ -187,3 +188,55 @@ def rotatematrix(data):
 		newdata.append(new_row)
 
 	return newdata
+
+
+def kcluster(rows, distance=pearson, k=4):
+	'''
+	clistering using K-means
+	k is the number of clusters
+	Involves the following steps:
+	1. assigning rows to clusters
+	2. finding new cluster centroids: the mean of the assigned rows
+	3. assigning the clusters and the process repeats
+	'''
+	# the initial centroids will have their value between the maximum and minimum of
+	# the columns of the datasets
+	ranges = [(min([row[i] for row in rows]), max([row[i] for row in rows])) for i in range(len(rows[0]))]
+
+	# randomly selected cluster centroids
+	clusters = [[random.random() * (ranges[i][1] - ranges[i][0]) + ranges[i][0] for i in range(len(rows[0]))] for j in range(k)]
+
+	# will iterate to 100 or up to the point that cluster assignment will not be changing
+	lastmatches = None
+
+	for iteration in range(100):
+		print("Iteration {}".format(iteration))
+		bestmatches = [[] for j in range(k)]
+
+		# cluster assignment
+		for i in range(len(rows)):
+			bestmatch = 0
+
+			for j in range(k):
+				d = distance(rows[i], clusters[j])
+				if d < distance(rows[i], clusters[bestmatch]):
+					bestmatch = j
+			bestmatches[bestmatch].append(i)
+
+		# complete if cluster assignment is not changing
+		if lastmatches == bestmatches:
+			break
+		lastmatches = bestmatches
+
+		# moving the centroids to be the mean of the data assigned to each class
+		for i in range(k):
+			avgs = [0.0] * len(rows[0])
+			if len(bestmatches[i]) > 0:
+				for rowid in bestmatches[i]:
+					for m in range(len(rows[rowid])):
+						avgs[m] += rows[rowid][m]
+				for j in range(len(avgs)):
+					avgs[j] /= len(bestmatches[i])
+				clusters[i] = avgs
+
+	return bestmatches
