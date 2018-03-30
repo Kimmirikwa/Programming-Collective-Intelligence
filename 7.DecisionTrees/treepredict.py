@@ -1,6 +1,9 @@
 # predicting using decision trees. Decision trees are more transparent and therefore easy to understand
 # as they appear to be like if and else statements once modeled
 
+from math import log
+
+
 # example data to be used in the classification
 # the data contains user behaviour and the final buying decision for a website
 # each value of the outer list if the data for each user, and the inner values
@@ -27,7 +30,7 @@ my_data = [
 
 
 class decisionnode():
-	def __init__(self, col=-1, value = None, tbranch = None, fbranch = None, result = None):
+	def __init__(self, col=-1, value = None, tbranch = None, fbranch = None, results = None):
 		'''
 		col -> is the column index of the criteria to be tested
 		value -> the value that the column must match to get a true result
@@ -39,7 +42,7 @@ class decisionnode():
 		self.value = value
 		self.tbranch = tbranch
 		self.fbranch = fbranch
-		self.result = result
+		self.results = results
 
 
 def divideset(rows, column, value):
@@ -69,3 +72,102 @@ def getuniquecounts(rows):
 		r = row[len(row) - 1]  # the result is in the last column
 		result_counts.setdefault(r, 0)
 		result_counts[r] += 1
+
+	return result_counts
+
+
+def giniimpurity(rows):
+	'''
+	calculates the impurity between the rows
+	'''
+	total = len(rows)
+	counts = getuniquecounts(rows)
+
+	imp = 0
+	for k1 in counts:
+		p1 = float(counts[k1]) / total
+		for k2 in counts:
+			if k1 == k2:
+				continue
+			p2 = float(counts[k2]) / total
+			imp += p1 * p2
+
+	return imp # imp will be zero if there is only one unique result in the rows
+
+
+def entropy(rows):
+	# log to base n of x is given by log(x) / log (n)
+	log2 = lambda x: log(x) / log(2)
+
+	counts = getuniquecounts(rows)
+
+	entrop = 0.0
+	for k in counts.keys():
+		p = float(counts[k]) / len(rows)
+		entrop -= p * log2(p)
+
+	return entrop # will be 0 if rows have the same result
+
+
+def buildtree(rows, scoreref = entropy):
+	'''
+	constructs the tree form the rows of data
+	'''
+	if len(rows) == 0:
+		return decisionnode()
+
+	current_score = scoreref(rows)
+
+	# variables to track the best criteria
+	best_gain = 0.0
+	best_criteria = None
+	best_sets = None
+
+	column_count = len(rows[0]) - 1
+
+	for col in range(column_count):
+		column_values = {}
+		for row in rows:
+			column_values[row[col]] = 1
+
+		for value in column_values.keys():
+			set1, set2 = divideset(rows, col, value) # dividing based on column col and value val
+
+			p = float(len(set1)) / len(rows)
+			gain = current_score - p * scoreref(set1) - (1 - p) * scoreref(set2)
+
+			if gain > best_gain:
+				best_gain = gain
+				best_criteria = (col, value)
+				best_sets = (set1, set2)
+
+		if best_gain > 0:
+			truebranch = buildtree(best_sets[0])
+			falsebranch = buildtree(best_sets[1])
+			return decisionnode(col=best_criteria[0], value=best_criteria[1], fbranch=falsebranch, tbranch=truebranch)
+
+		return decisionnode(results=getuniquecounts(rows))
+
+
+def classify(observation, tree):
+	'''
+	classifies the observation using the tree
+	'''
+	if tree.results != None:  # this is a leaf node
+		return tree.results
+	v = observation[tree.col]
+	branch = None
+	if isinstance(v,int) or isinstance(v,float):
+		# for numerical value
+		if v >= tree.value:
+			branch = tree.tbranch
+		else:
+			branch = tree.fbranch
+	else:
+		# for nominal value
+		if v == tree.value:
+			branch = tree.tbranch
+		else:
+			branch = tree.fbranch
+
+	return classify(observation, branch)
