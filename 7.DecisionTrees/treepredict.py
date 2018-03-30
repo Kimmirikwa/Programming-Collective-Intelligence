@@ -40,3 +40,20 @@ class decisionnode():
 		self.tbranch = tbranch
 		self.fbranch = fbranch
 		self.result = result
+
+
+def divideset(rows, column, value):
+	'''
+	divides the rows on the specified column based on the value
+	the value can be numeric or nomal
+	'''
+	split_function = None  # to be used in splitting the row into 2 sets
+	if isintance(value, int):
+		split_function = lambda row : row[column] >= value
+	else:
+		split_function = lambda row : row[column] == value
+
+	set1 = [row for row in rows if split_function(row)]  # true values
+	set2 = [row for row in rows if not split_function(row)]  # false values
+
+	return set1, set2
