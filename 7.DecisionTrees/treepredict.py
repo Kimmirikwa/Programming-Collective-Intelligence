@@ -27,7 +27,7 @@ my_data = [
 
 
 class decisionnode():
-	def __init__(self, col=-1, value, tbranch, fbranch, result):
+	def __init__(self, col=-1, value = None, tbranch = None, fbranch = None, result = None):
 		'''
 		col -> is the column index of the criteria to be tested
 		value -> the value that the column must match to get a true result
@@ -48,7 +48,7 @@ def divideset(rows, column, value):
 	the value can be numeric or nomal
 	'''
 	split_function = None  # to be used in splitting the row into 2 sets
-	if isintance(value, int):
+	if isinstance(value,int) or isinstance(value,float):
 		split_function = lambda row : row[column] >= value
 	else:
 		split_function = lambda row : row[column] == value
