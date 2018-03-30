@@ -57,3 +57,15 @@ def divideset(rows, column, value):
 	set2 = [row for row in rows if not split_function(row)]  # false values
 
 	return set1, set2
+
+
+def getuniquecounts(rows):
+	'''
+	gets the number of unique itesm in the rows
+	'''
+	result_counts = {}
+
+	for row in rows:
+		r = row[len(row) - 1]  # the result is in the last column
+		result_counts.setdefault(r, 0)
+		result_counts[r] += 1
