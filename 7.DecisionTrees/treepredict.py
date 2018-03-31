@@ -123,7 +123,7 @@ def buildtree(rows, scoreref = entropy):
 	best_criteria = None
 	best_sets = None
 
-	column_count = len(rows[0]) - 1
+	column_count = len(rows[0]) - 1  # the last column having the result is not included
 
 	for col in range(column_count):
 		column_values = {}
@@ -171,3 +171,35 @@ def classify(observation, tree):
 			branch = tree.fbranch
 
 	return classify(observation, branch)
+
+
+def prune(tree, mingain):
+	'''
+	prunes the tree to reduce overfitting
+	mingain - if the reduction in entropy is less than this, merge the branches of the tree
+	'''
+	# prune further the branches if they are not leaves
+	if tree.tbranch.results == None:
+		prune(tree.tbranch, mingain)
+	if tree.fbranch.results == None:
+		prune(tree.fbranch, mingain)
+
+	# try to merge the leaves if the information gain is less than the threshold
+	if tree.tbranch.results != None and tree.fbranch.results != None:
+		# combining the datasets of the branches
+		tbranch, fbranch = [], []
+		for value, count in tree.tbranch.results.items():
+			tbranch += [[value]] * count
+
+		for value, count in tree.fbranch.results.items():
+			fbranch += [[value]] * count
+
+		tree_entropy = entropy(fbranch + tbranch)
+		branches_entropy = entropy(tbranch) + entropy(tbranch)
+
+		gain = tree_entropy - branches_entropy
+
+		if gain < mingain:
+			# merge the branches
+			tree.tbranch, tree.fbranch = None, None  # deleting the child Nodes
+			tree.results = getuniquecounts(tbranch + fbranch)
