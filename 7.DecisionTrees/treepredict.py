@@ -109,6 +109,19 @@ def entropy(rows):
 	return entrop # will be 0 if rows have the same result
 
 
+def variance(rows):
+	'''
+	scoring function suitable for numerical outcomes
+	the lower the value, the closer the values are and vice versa
+	'''
+	if len(rows) == 0:
+		return 0
+	outcomes = [float(row[len(row) - 1]) for row in rows]
+	mean = sum(outcomes) / len(outcomes)
+	variance = sum([pow(outcome - mean, 2) for outcome in outcomes]) / len(outcomes)
+	return variance
+
+
 def buildtree(rows, scoreref = entropy):
 	'''
 	constructs the tree form the rows of data
