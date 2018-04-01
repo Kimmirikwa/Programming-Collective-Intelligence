@@ -156,6 +156,22 @@ def classify(observation, tree):
 	if tree.results != None:  # this is a leaf node
 		return tree.results
 	v = observation[tree.col]
+	if v == None:
+		# handling missing data
+		# taking both routes and giving each branch a weight equal to the fraction of all the rows
+		# in it
+		tr, fr = classify(observation, tree.tbranch), classify(observation, tree.fbranch)
+		tcount = sum(tr.values())
+		fcount = sum(tr.values())
+		# the weghts for the truth and false routes
+		tw = float(tcount) / (tcount + fcount)
+		fw = float(fcount) / (tcount + fcount)
+		result = {}
+		for k, v in tr.items():
+			result[k] = v * tw
+		for k, v in tr.items():
+			result[k] = v * fw
+		return result
 	branch = None
 	if isinstance(v,int) or isinstance(v,float):
 		# for numerical value
